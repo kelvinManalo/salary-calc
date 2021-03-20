@@ -15,6 +15,7 @@ using salary_calc_api.Data;
 using salary_calc_api.Services.EmployeeService;
 using salary_calc_api.Factories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 
 namespace salary_calc_api
 {
@@ -42,8 +43,10 @@ namespace salary_calc_api
                             .AllowAnyMethod();
                     });
             });
-            services.AddControllers();
+            //services.AddControllers();
             services.AddDbContext<DataContext>(options => {options.UseInMemoryDatabase("supermarket-api-in-memory");});
+            services.AddControllers().AddNewtonsoftJson();
+            
             services.AddAutoMapper(typeof(Startup));
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IEmployeeFactory, EmployeeFactory>();

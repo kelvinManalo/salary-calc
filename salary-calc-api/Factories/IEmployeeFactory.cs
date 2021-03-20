@@ -5,6 +5,6 @@ namespace salary_calc_api.Factories
 {
     public interface IEmployeeFactory
     {
-         IEmployeeService GetEmployeeService(EmployeeType employeeType = EmployeeType.None);
+         IComputeSalaryService GetEmployeeService(EmployeeType employeeType = EmployeeType.None);
     }
 }

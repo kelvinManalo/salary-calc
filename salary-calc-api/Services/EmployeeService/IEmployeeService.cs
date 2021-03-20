@@ -9,7 +9,6 @@ namespace salary_calc_api.Services.EmployeeService
     {
          Task<ServiceResponse<List<GetEmployeeListDto>>> GetAllEmployees();
          Task<ServiceResponse<GetEmployeeDto>> GetEmployeeById(int id);
-         Task<ServiceResponse<List<GetEmployeeListDto>>> AddEmployee(AddEmployeeDto newEmployee);
-         Task<ServiceResponse<List<GetEmployeeListDto>>> ComputeSalaryEmployee(ComputeSalaryEmployeeDto computeEmployee);           
+         
     }
 }

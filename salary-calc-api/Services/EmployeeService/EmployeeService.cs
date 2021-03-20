@@ -22,30 +22,7 @@ namespace salary_calc_api.Services.EmployeeService
             _mapper = mapper;
             _context = context;
         }
-
-        public async Task<ServiceResponse<List<GetEmployeeListDto>>> AddEmployee(AddEmployeeDto newEmployee)
-        {
-           ServiceResponse<List<GetEmployeeListDto>> serviceResponse = new ServiceResponse<List<GetEmployeeListDto>>();
-
-           try{
-                Employee employee = _mapper.Map<Employee>(newEmployee);
-
-                await _context.AddAsync(employee);
-                await _context.SaveChangesAsync();
-
-                serviceResponse.Data = await _context.Employees.Select(employee => _mapper.Map<GetEmployeeListDto>(employee)).ToListAsync();
-            } catch (Exception ex) {
-                serviceResponse.Success = false;
-                serviceResponse.Message = ex.Message;
-            }
-           
-           return serviceResponse;           
-        }
-
-        public virtual Task<ServiceResponse<List<GetEmployeeListDto>>> ComputeSalaryEmployee(ComputeSalaryEmployeeDto computeEmployee)
-        {
-            throw new System.NotImplementedException();
-        }
+        
 
         public async Task<ServiceResponse<List<GetEmployeeListDto>>> GetAllEmployees()
         {
@@ -58,12 +35,12 @@ namespace salary_calc_api.Services.EmployeeService
             return serviceResponse;
         }
 
-        public async Task<ServiceResponse<GetEmployeeDto>> GetEmployeeById(int employeeId)
+        public async Task<ServiceResponse<GetEmployeeDto>> GetEmployeeById(int Id)
         {
             ServiceResponse<GetEmployeeDto> serviceResponse = new ServiceResponse<GetEmployeeDto>();
 
             //fetch single data
-            Employee dbEmployee = await _context.Employees.FirstOrDefaultAsync(employee => employee.employeeId == employeeId);
+            Employee dbEmployee = await _context.Employees.FirstOrDefaultAsync(employee => employee.Id == Id);
             serviceResponse.Data = _mapper.Map<GetEmployeeDto>(dbEmployee);
 
             return serviceResponse;

@@ -38,3 +38,7 @@ C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Microsoft.Entit
 C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Microsoft.Extensions.DependencyInjection.dll
 C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\System.Diagnostics.DiagnosticSource.dll
+C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Newtonsoft.Json.dll
+C:\Projects\ReactJS\salary-calc\salary-calc-api\bin\Debug\net5.0\Newtonsoft.Json.Bson.dll

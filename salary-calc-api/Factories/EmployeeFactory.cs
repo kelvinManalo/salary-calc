@@ -15,16 +15,16 @@ namespace salary_calc_api.Factories
             _context = context;
         }
 
-        public IEmployeeService GetEmployeeService(EmployeeType employeeType = EmployeeType.None)
+        public IComputeSalaryService GetEmployeeService(EmployeeType employeeType = EmployeeType.None)
         {
             switch (employeeType)
             {
-                case EmployeeType.Contractual:
+                case EmployeeType.Contractual:                    
                     return new ContractualEmployeeService(_mapper,_context);
                 case EmployeeType.Regular:
                     return new RegularEmployeeService(_mapper,_context);
                 default:
-                    return new EmployeeService(_mapper,_context);
+                    return null;
             }
         }
     }

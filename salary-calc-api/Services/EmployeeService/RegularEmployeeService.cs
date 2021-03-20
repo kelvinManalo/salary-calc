@@ -1,40 +1,85 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using System;
-
+using salary_calc_api.Data;
 using salary_calc_api.Dtos;
 using salary_calc_api.Models;
-using salary_calc_api.Data;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace salary_calc_api.Services.EmployeeService
 {
-    public class RegularEmployeeService : EmployeeService
+    public class RegularEmployeeService : IComputeSalaryService
     {
-       
+        private readonly IMapper _mapper;
+        private readonly DataContext _context;
+
         private static int WORKDAYS = 22;
         private static decimal TAX = 0.12M;
-        public RegularEmployeeService(IMapper mapper, DataContext context) : base(mapper, context)
-        {}
 
-        public override async Task<ServiceResponse<List<GetEmployeeListDto>>> ComputeSalaryEmployee(ComputeSalaryEmployeeDto computeEmployee)
+        public RegularEmployeeService(IMapper mapper, DataContext context)
+        {
+            _mapper = mapper;
+            _context = context;            
+        }
+
+        public async Task<ServiceResponse<List<GetEmployeeListDto>>> AddEmployee(AddEmployeeDto newEmployee)
         {
             ServiceResponse<List<GetEmployeeListDto>> serviceResponse = new ServiceResponse<List<GetEmployeeListDto>>();
 
-            try 
-            { 
-                Employee employee = await _context.Employees.FirstOrDefaultAsync(employee => employee.employeeId == computeEmployee.employeeId && employee.employeeType == computeEmployee.employeeType);
+           try{
+                var _computeEmployee = newEmployee as AddRegularEmployeeDto;
 
-                employee.effectiveDays = computeEmployee.effectiveDays;
-                employee.computedSalary = ComputeSalaryRegular(employee.baseSalary, computeEmployee.effectiveDays);
-                employee.completed = computeEmployee.completed;
+                Employee employee = new Employee {
+                        name = newEmployee.name,
+                        birthdate = newEmployee.birthdate,
+                        tin = newEmployee.tin,
+                        employeeType = newEmployee.employeeType,
+                        computedSalary = 0,
+                        completed = 0
+                };
 
-                _context.Employees.Update(employee);
+                RegularEmployee regularEmployee = new RegularEmployee{
+                    Employee = employee,
+                    baseSalary = _computeEmployee.baseSalary,
+                    daysAbsent = _computeEmployee.daysAbsent
+                };
+
+                await _context.RegularEmployees.AddAsync(regularEmployee);
                 await _context.SaveChangesAsync();
 
-                serviceResponse.Data = await _context.Employees.Select(emp => _mapper.Map<GetEmployeeListDto>(emp)).ToListAsync();
+                serviceResponse.Data = await _context.Employees.Select(employee => _mapper.Map<GetEmployeeListDto>(employee)).ToListAsync();
+            } catch (Exception ex) {
+                serviceResponse.Success = false;
+                serviceResponse.Message = ex.Message;
+            }
+           
+           return serviceResponse; 
+        }
+
+        public async Task<ServiceResponse<GetEmployeeDto>> CalculateSalary(ComputeSalaryEmployeeDto computeEmployee)
+        {
+            ServiceResponse<GetEmployeeDto> serviceResponse = new ServiceResponse<GetEmployeeDto>();
+
+            try 
+            {
+                var _computeEmployee = computeEmployee as RegularComputeSalaryDto;                
+
+                RegularEmployee regularEmployee = await _context.RegularEmployees.Include(employee => employee.Employee).FirstOrDefaultAsync(employee => employee.Id == _computeEmployee.Id);
+
+                regularEmployee.daysAbsent = _computeEmployee.daysAbsent;
+                regularEmployee.baseSalary = _computeEmployee.baseSalary;
+                regularEmployee.Employee.computedSalary = ComputeSalaryRegular(_computeEmployee.daysAbsent, _computeEmployee.baseSalary);
+                regularEmployee.Employee.completed = 1;
+
+                _context.RegularEmployees.Update(regularEmployee);
+                await _context.SaveChangesAsync();
+
+                RegularEmployee dbREmployee = await _context.RegularEmployees.Include(employee => employee.Employee).FirstOrDefaultAsync(employee => employee.Id == _computeEmployee.Id);
+
+                serviceResponse.Data = _mapper.Map<RegularGetEmployeeDto>(dbREmployee);
+
 
             }catch(Exception ex)
             {
@@ -42,6 +87,7 @@ namespace salary_calc_api.Services.EmployeeService
                 serviceResponse.Message = ex.Message;
             }
             return serviceResponse;
+        
         }
 
         private decimal ComputeSalaryRegular(decimal salary, decimal daysAbsent)

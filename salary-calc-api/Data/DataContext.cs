@@ -6,6 +6,8 @@ namespace salary_calc_api.Data
     public class DataContext : DbContext
     {
         public DbSet<Employee> Employees {get;set;}
+        public DbSet<RegularEmployee> RegularEmployees {get;set;}
+        public DbSet<ContractualEmployee> ContractualEmployees {get;set;}
 
         public DataContext(DbContextOptions<DataContext> options) : base(options){}
         
@@ -14,16 +16,9 @@ namespace salary_calc_api.Data
             base.OnModelCreating(builder);
 
             builder.Entity<Employee>().ToTable("Employee");
-            builder.Entity<Employee>().HasKey(p => p.employeeId);
-            builder.Entity<Employee>().Property(p => p.employeeId).IsRequired().ValueGeneratedOnAdd();
-            builder.Entity<Employee>().Property(p => p.name).IsRequired();
-            builder.Entity<Employee>().Property(p => p.birthdate).IsRequired();
-            builder.Entity<Employee>().Property(p => p.tin).IsRequired();
-            builder.Entity<Employee>().Property(p => p.employeeType).IsRequired();
-            builder.Entity<Employee>().Property(p => p.baseSalary).IsRequired();
-            builder.Entity<Employee>().Property(p => p.effectiveDays);
-            builder.Entity<Employee>().Property(p => p.computedSalary);
-            builder.Entity<Employee>().Property(p => p.completed);
+            builder.Entity<RegularEmployee>().ToTable("RegularEmployee");
+            builder.Entity<ContractualEmployee>().ToTable("ContractualEmployee");
+            
         }
     }
 }

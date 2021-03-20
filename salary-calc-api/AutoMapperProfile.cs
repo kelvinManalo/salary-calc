@@ -11,6 +11,10 @@ namespace salary_calc_api
             CreateMap<Employee,GetEmployeeListDto>();
             CreateMap<Employee,ComputeSalaryEmployeeDto>();
             CreateMap<AddEmployeeDto,Employee>();
+            CreateMap<Employee,ContractualEmployee>();
+            CreateMap<Employee,RegularEmployee>();
+            CreateMap<ContractualEmployee,ContractualGetEmployeeDto>();
+            
         }
     }
 }

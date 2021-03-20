@@ -1,38 +1,82 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-
+using salary_calc_api.Data;
 using salary_calc_api.Dtos;
 using salary_calc_api.Models;
-using salary_calc_api.Data;
-using System.Linq;
 
 namespace salary_calc_api.Services.EmployeeService
 {
-    public class ContractualEmployeeService : EmployeeService
+    public class ContractualEmployeeService : IComputeSalaryService
     {
-        public ContractualEmployeeService(IMapper mapper, DataContext context) : base(mapper, context)
+        private readonly IMapper _mapper;
+        private readonly DataContext _context;
+
+        public ContractualEmployeeService(IMapper mapper, DataContext context)
         {
+            _mapper = mapper;
+            _context = context;
         }
 
-        public override async Task<ServiceResponse<List<GetEmployeeListDto>>> ComputeSalaryEmployee(ComputeSalaryEmployeeDto computeEmployee)
+        public async Task<ServiceResponse<List<GetEmployeeListDto>>> AddEmployee(AddEmployeeDto newEmployee)
         {
             ServiceResponse<List<GetEmployeeListDto>> serviceResponse = new ServiceResponse<List<GetEmployeeListDto>>();
 
-            try 
-            { 
-                Employee employee = await _context.Employees.FirstOrDefaultAsync(employee => employee.employeeId == computeEmployee.employeeId && employee.employeeType == computeEmployee.employeeType);
+           try{
+                var _computeEmployee = newEmployee as AddContractualEmployeeDto;
 
-                employee.effectiveDays = computeEmployee.effectiveDays;
-                employee.computedSalary = ComputeSalaryContractual(employee.baseSalary, computeEmployee.effectiveDays);
-                employee.completed = computeEmployee.completed;
+                Employee employee = new Employee {
+                        name = newEmployee.name,
+                        birthdate = newEmployee.birthdate,
+                        tin = newEmployee.tin,
+                        employeeType = newEmployee.employeeType,
+                        computedSalary = 0,
+                        completed = 0
+                };
 
-                _context.Employees.Update(employee);
+                ContractualEmployee contractualEmployee = new ContractualEmployee{
+                    Employee = employee,
+                    ratePerDay = _computeEmployee.ratePerDay,
+                    workedDays = _computeEmployee.workedDays
+                };
+
+                await _context.ContractualEmployees.AddAsync(contractualEmployee);
                 await _context.SaveChangesAsync();
 
-                serviceResponse.Data = await _context.Employees.Select(emp => _mapper.Map<GetEmployeeListDto>(emp)).ToListAsync();
+                serviceResponse.Data = await _context.Employees.Select(employee => _mapper.Map<GetEmployeeListDto>(employee)).ToListAsync();
+            } catch (Exception ex) {
+                serviceResponse.Success = false;
+                serviceResponse.Message = ex.Message;
+            }
+           
+           return serviceResponse;   
+        }
+
+        public async Task<ServiceResponse<GetEmployeeDto>> CalculateSalary(ComputeSalaryEmployeeDto computeEmployee)
+        {
+            ServiceResponse<GetEmployeeDto> serviceResponse = new ServiceResponse<GetEmployeeDto>();
+
+            try 
+            {
+                var _computeEmployee = computeEmployee as ContractualComputeSalaryDto;                
+
+                ContractualEmployee contractualEmployee = await _context.ContractualEmployees.Include(employee => employee.Employee).FirstOrDefaultAsync(employee => employee.Id == _computeEmployee.Id);
+
+                contractualEmployee.workedDays = _computeEmployee.workedDays;
+                contractualEmployee.ratePerDay = _computeEmployee.ratePerDay;
+                contractualEmployee.Employee.computedSalary = ComputeSalaryContractual(_computeEmployee.ratePerDay, _computeEmployee.workedDays);
+                contractualEmployee.Employee.completed = 1;
+
+                _context.ContractualEmployees.Update(contractualEmployee);
+                await _context.SaveChangesAsync();
+
+                ContractualEmployee dbCEmployee = await _context.ContractualEmployees.Include(employee => employee.Employee).FirstOrDefaultAsync(employee => employee.Id == _computeEmployee.Id);
+
+                 serviceResponse.Data = _mapper.Map<ContractualGetEmployeeDto>(dbCEmployee);
+
 
             }catch(Exception ex)
             {
@@ -42,11 +86,10 @@ namespace salary_calc_api.Services.EmployeeService
             return serviceResponse;
         }
 
-        private decimal ComputeSalaryContractual(decimal salary, decimal daysReported)
+        private decimal ComputeSalaryContractual(decimal ratePerDay, decimal workedDays)
         {
-            decimal computedSalary;
-            
-            computedSalary = salary * daysReported;
+            decimal computedSalary;            
+            computedSalary = ratePerDay * workedDays;
 
             return Math.Round(computedSalary,2);
         }
